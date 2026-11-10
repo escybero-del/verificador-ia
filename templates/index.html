@@ -1,0 +1,108 @@
+﻿<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Verificador IA de Imágenes</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f6f9;
+            text-align: center;
+            padding: 40px;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0px 4px 15px rgba(0,0,0,0.1);
+            display: inline-block;
+            max-width: 400px;
+            width: 100%;
+        }
+        .logo {
+            width: 100px;
+            height: 100px;
+            margin-bottom: 15px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid #007bff;
+        }
+        input, button {
+            margin-top: 15px;
+            padding: 10px;
+            width: 100%;
+            box-sizing: border-box;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        /* Estilos para la vista previa y el cargador */
+        #preview-container {
+            margin-top: 15px;
+            display: none;
+        }
+        #image-preview {
+            max-width: 100%;
+            max-height: 200px;
+            border-radius: 5px;
+            border: 1px solid #ddd;
+        }
+        #loading {
+            display: none;
+            margin-top: 15px;
+            color: #007bff;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Logotipo integrado -->
+        <img src="{{ url_for('static', filename='logo.jpg') }}" alt="Logo" class="logo">
+        
+        <h2>Verificador de Imágenes con IA</h2>
+        <p>Sube una imagen para analizar sus parámetros y nivel de nitidez.</p>
+        
+        <form id="upload-form" action="/analizar" method="POST" enctype="multipart/form-data">
+            <input type="file" name="imagen" id="imagen-input" accept="image/*" required onchange="previewImage(event)"><br>
+            
+            <!-- Contenedor de la vista previa de la imagen -->
+            <div id="preview-container">
+                <p style="font-size: 12px; color: #666; margin: 5px 0;">Vista previa:</p>
+                <img id="image-preview" src="#" alt="Vista previa">
+            </div>
+
+            <button type="submit">Analizar Imagen</button>
+        </form>
+
+        <!-- Indicador de carga -->
+        <div id="loading">⏳ Analizando imagen, por favor espera...</div>
+    </div>
+
+    <script>
+        // Función para mostrar la vista previa de la imagen seleccionada
+        function previewImage(event) {
+            var reader = new FileReader();
+            reader.onload = function(){
+                var output = document.getElementById('image-preview');
+                output.src = reader.result;
+                document.getElementById('preview-container').style.display = 'block';
+            };
+            reader.readAsDataURL(event.target.files[0]);
+        }
+
+        // Función para mostrar el mensaje de carga al enviar el formulario
+        document.getElementById('upload-form').addEventListener('submit', function() {
+            document.getElementById('loading').style.display = 'block';
+        });
+    </script>
+</body>
+</html>
