@@ -1,107 +1,77 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Verificador IA de Imágenes</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Verificador de Imágenes con IA</title>
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #f4f6f9;
-            text-align: center;
-            padding: 40px;
-        }
-        .container {
-            background: white;
-            padding: 30px;
-            border-radius: 10px;
-            box-shadow: 0px 4px 15px rgba(0,0,0,0.1);
-            display: inline-block;
-            max-width: 400px;
-            width: 100%;
-        }
-        .logo {
-            width: 100px;
-            height: 100px;
-            margin-bottom: 15px;
-            border-radius: 50%;
-            object-fit: cover;
-            border: 2px solid #007bff;
-        }
-        input, button {
-            margin-top: 15px;
-            padding: 10px;
-            width: 100%;
-            box-sizing: border-box;
-        }
-        button {
-            background-color: #007bff;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            font-weight: bold;
-        }
-        button:hover {
-            background-color: #0056b3;
-        }
-        /* Estilos para la vista previa y el cargador */
-        #preview-container {
-            margin-top: 15px;
-            display: none;
-        }
-        #image-preview {
-            max-width: 100%;
-            max-height: 200px;
-            border-radius: 5px;
-            border: 1px solid #ddd;
-        }
-        #loading {
-            display: none;
-            margin-top: 15px;
-            color: #007bff;
-            font-weight: bold;
-        }
+        body { font-family: Arial, sans-serif; background: #0f172a; color: #fff; padding: 15px; margin: 0; }
+        .container { max-width: 450px; margin: auto; background: #1e293b; padding: 20px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.5); }
+        h2 { text-align: center; color: #38bdf8; font-size: 1.4em; margin-bottom: 20px; }
+        .card { background: #334155; padding: 12px; margin: 10px 0; border-radius: 8px; text-align: center; }
+        .card h3 { margin: 0 0 5px 0; font-size: 0.9em; color: #94a3b8; }
+        .card p { margin: 0; font-size: 1.2em; font-weight: bold; color: #f8fafc; }
+        .verdict { background: #0284c7; border: 1px solid #38bdf8; }
+        input[type="file"] { width: 100%; margin: 10px 0; color: #cbd5e1; }
+        button { background: #0ea5e9; color: white; border: none; padding: 12px; width: 100%; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 1em; }
+        button:hover { background: #0284c7; }
+        .hidden { display: none; }
     </style>
 </head>
 <body>
     <div class="container">
-        <!-- Logotipo integrado -->
-        <img src="{{ url_for('static', filename='logo.jpg') }}" alt="Logo" class="logo">
-        
-        <h2>Verificador de Imágenes con IA</h2>
-        <p>Sube una imagen para analizar sus parámetros y nivel de nitidez.</p>
-        
-        <form id="upload-form" action="/analizar" method="POST" enctype="multipart/form-data">
-            <input type="file" name="imagen" id="imagen-input" accept="image/*" required onchange="previewImage(event)"><br>
-            
-            <!-- Contenedor de la vista previa de la imagen -->
-            <div id="preview-container">
-                <p style="font-size: 12px; color: #666; margin: 5px 0;">Vista previa:</p>
-                <img id="image-preview" src="#" alt="Vista previa">
-            </div>
-
+        <h2>Verificador de Imágenes IA</h2>
+        <form id="upload-form" enctype="multipart/form-data">
+            <input type="file" name="imagen" id="file-input" required>
             <button type="submit">Analizar Imagen</button>
         </form>
 
-        <!-- Indicador de carga -->
-        <div id="loading">⏳ Analizando imagen, por favor espera...</div>
+        <div id="results" class="hidden" style="margin-top: 20px;">
+            <div class="card">
+                <h3>Dimensiones</h3>
+                <p id="dim-val">-</p>
+            </div>
+            <div class="card">
+                <h3>Índice FFT</h3>
+                <p id="fft-val">-</p>
+            </div>
+            <div class="card">
+                <h3>Nitidez</h3>
+                <p id="nit-val">-</p>
+            </div>
+            <div class="card verdict">
+                <h3>Veredicto Preliminar</h3>
+                <p id="verdict-val">-</p>
+            </div>
+        </div>
     </div>
 
     <script>
-        // Función para mostrar la vista previa de la imagen seleccionada
-        function previewImage(event) {
-            var reader = new FileReader();
-            reader.onload = function(){
-                var output = document.getElementById('image-preview');
-                output.src = reader.result;
-                document.getElementById('preview-container').style.display = 'block';
-            };
-            reader.readAsDataURL(event.target.files[0]);
-        }
-
-        // Función para mostrar el mensaje de carga al enviar el formulario
-        document.getElementById('upload-form').addEventListener('submit', function() {
-            document.getElementById('loading').style.display = 'block';
+        const form = document.getElementById('upload-form');
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const formData = new FormData(form);
+            
+            try {
+                const response = await fetch('/analizar', {
+                    method: 'POST',
+                    body: formData
+                });
+                const data = await response.json();
+                
+                if(data.estado === "exito") {
+                    document.getElementById('dim-val').innerText = data.dimensiones;
+                    document.getElementById('fft-val').innerText = data.indice_fft;
+                    document.getElementById('nit-val').innerText = data.nitidez;
+                    document.getElementById('verdict-val').innerText = data.veredicto_preliminar;
+                    
+                    document.getElementById('results').classList.remove('hidden');
+                } else {
+                    alert(data.error || "Error al procesar la imagen");
+                }
+            } catch (err) {
+                alert("Error de conexión con el servidor");
+            }
         });
     </script>
 </body>
