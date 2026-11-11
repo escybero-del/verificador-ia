@@ -1,26 +1,25 @@
-﻿import os
-from flask import Flask, request, jsonify, render_template
+import os
 import cv2
 import numpy as np
+from flask import Flask, request, jsonify, render_template
 
-basedir = os.path.abspath(os.path.dirname(__file__))
-app = Flask(__name__, template_folder=os.path.join(basedir, 'templates'))
+app = Flask(__name__, template_folder="templates")
 
 @app.route("/")
-def inicio():
+def index():
     return render_template("index.html")
 
-@app.route('/analizar', methods=['POST'])
-def analizar_imagen():
-    if 'imagen' not in request.files:
+@app.route("/analizar", methods=["POST"])
+def analizar():
+    if "imagen" not in request.files:
         return jsonify({"error": "No se envió ninguna imagen"}), 400
 
-    archivo = request.files['imagen']
+    archivo = request.files["imagen"]
     npimg = np.frombuffer(archivo.read(), np.uint8)
     imagen = cv2.imdecode(npimg, cv2.IMREAD_COLOR)
 
     if imagen is None:
-        return jsonify({"error": "Error al procesar la imagen"}), 400
+        return jsonify({"error": "No se pudo decodificar la imagen"}), 400
 
     alto, ancho, canales = imagen.shape
     gris = cv2.cvtColor(imagen, cv2.COLOR_BGR2GRAY)
@@ -41,10 +40,10 @@ def analizar_imagen():
         "dimensiones": f"{ancho}x{alto}",
         "nitidez": round(nitidez, 2),
         "indice_fft": round(anomalia_fft, 2),
-        "veredicto_preliminar": "Posible contenido sintético/IA" if alerta_ia else "Distribución de parámetros normales"
+        "veredicto_preliminar": "Imagen generada por IA 🤖" if alerta_ia else "Foto Real (Cámara) 📸"
     }
 
     return jsonify(resultado)
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     app.run(debug=True)
