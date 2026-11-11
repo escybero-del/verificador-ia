@@ -33,7 +33,7 @@ def analizar():
     except Exception:
         anomalia_fft = 0.0
 
-    alerta_ia = anomalia_fft > 600 or nitidez < 50
+    alerta_ia = anomalia_fft > 150 or nitidez < 55
 
     resultado = {
         "estado": "exito",
